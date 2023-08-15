@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>My App</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.1/socket.io.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.0/dropzone.js"></script>
+    </head>
+    <body>
+        <header>
+            <div class="title-section">
+                <h1 class="title">My App</h1>
+                <p class="version-date">Version 1.0.0 - July 12, 2023</p>
+            </div>
+            <video autoplay playsinline id="videoElement"></video>
+            <canvas id="canvas"></canvas>
+        </header>
+
+        <div class="row">
+            <div class="column video-column">
+                <h2>Original Model Output</h2>
+                <div class="video-feed-box" id="video-feed-1">
+                    <img id="photo" src="#" alt="Processed feed 1 will appear here">
+                </div>
+            </div>
+            
+            <div class="column left">
+                <h2>Upload File</h2>
+                <div class="file-upload-box" id="file-upload">
+                    <div class="drop-zone">
+                        <span class="drop-zone__prompt">Drop file here or click to upload</span>
+                        <input type="file" name="myFile" class="drop-zone__input">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column video-column">
+                <h2>Modified Model Output</h2>
+                <div class="video-feed-box" id="video-feed-2">
+                    <img id="photo-blur" src="#" alt="Processed feed 2 will appear here">
+                </div>
+            </div>            
+        </div>
+        
+        <script src="{{ url_for('static',filename='js/video-script.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/file-upload.js') }}"></script>
+        <script src="{{ url_for('static',filename='js/progress-bar.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/dummy-scripts.js') }}"></script>
+    </body>
+</html>

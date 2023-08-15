@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDG Application</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        header {
+            background-color: #34495e;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 75px;
+        }
+
+        .title-section {
+            margin-right: 20px;
+        }
+
+        header .title, h2 {
+            margin: 0;
+            color: #ecf0f1;
+        }
+
+        header .title {
+            font-size: 24px;
+        }
+
+        header .version-date {
+            font-size: 14px;
+            color: #bdc3c7;
+        }
+
+        h2 {
+            padding: 0;
+            margin-bottom: 10px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            align-items: stretch;
+        }
+
+        .column {
+            flex: 1;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .upload-area {
+            font-size: 1.25rem;
+            flex: 1;
+            max-width: 682px;
+            max-height: 522px;
+            padding: 20px;
+            background-color: #34495e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            box-shadow: 0px 10px 20px -5px rgba(0, 0, 0, 0.3);
+            transition: background-color .15s linear;
+            position: relative; 
+        }
+
+        .upload-area::before {
+            content: '';
+            display: block;
+            border: 2px dotted #c8dadf;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            bottom: 10px;
+            left: 10px;
+            border-radius: 3px;
+            pointer-events: none;
+        }
+
+        .upload-area:hover {
+            background-color: #5c646d;
+        }
+
+        .upload-area label, .upload-area button {
+            display: block;
+            margin: 7px auto;
+            cursor: pointer;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .process-area {
+            padding: 20px;
+            margin-left: 20px;
+            background-color: #34495e;
+            flex: 1;  /* Ensures the same height as upload-area */
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+            border-radius: 5px;
+            box-shadow: 0px 10px 20px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .process-item {
+            margin-bottom: 10px;
+        }
+
+        .process-item::before {
+            content: "\2610";
+            margin-right: 10px;
+        }
+
+        .completed::before {
+            content: "\2611";
+        }
+
+    
+    </style>
+</head>
+
+<header>
+    <div class="title-section">
+        <h1 class="title">SDG Application</h1>
+        <p class="version-date">Version 1.0.0 - July 12, 2023</p>
+    </div>
+    <video autoplay playsinline id="videoElement"></video>
+    <canvas id="canvas"></canvas>
+</header>
+
+<body>
+    <div class="row">
+    <div class="column left">
+        <h2>Upload File</h2>
+        <div class="upload-area">
+            <svg class="box__icon" xmlns="http://www.w3.org/2000/svg" width="50" height="43" viewBox="0 0 50 43"><path d="M48.4 26.5c-.9 0-1.7.7-1.7 1.7v11.6h-43.3v-11.6c0-.9-.7-1.7-1.7-1.7s-1.7.7-1.7 1.7v13.2c0 .9.7 1.7 1.7 1.7h46.7c.9 0 1.7-.7 1.7-1.7v-13.2c0-1-.7-1.7-1.7-1.7zm-24.5 6.1c.3.3.8.5 1.2.5.4 0 .9-.2 1.2-.5l10-11.6c.7-.7.7-1.7 0-2.4s-1.7-.7-2.4 0l-7.1 8.3v-25.3c0-.9-.7-1.7-1.7-1.7s-1.7.7-1.7 1.7v25.3l-7.1-8.3c-.7-.7-1.7-.7-2.4 0s-.7 1.7 0 2.4l10 11.6z"/></svg>
+            <input type="file" id="file-upload" accept=".usd,.gltf">
+            <label for="file-upload" id="file-label"><strong>Choose a file</strong> </label>
+            <button onclick="uploadFile()">Upload</button>
+        </div>
+    </div>
+    <div class="column right">
+        <h2>Status</h2>
+        <div class="process-area">
+            <div class="process-item" id="synthesizing">Synthesizing</div>
+            <div class="process-item" id="data-preparation">Data Preparation</div>
+            <div class="process-item" id="training-validation">Training & Validation</div>
+            <div class="process-item" id="download-available">Download Available</div>
+            <div class="process-item" id="live-camera-demo">Live Camera Demo (Optional)</div>
+        </div>
+    </div>
+    </div>
+    <script>
+        function uploadFile() {
+            let fileInput = document.getElementById('file-upload');
+            if (!fileInput.files.length) {
+                alert('Please choose a file before uploading.');
+                return;
+            }
+
+            let file = fileInput.files[0];
+            let formData = new FormData();
+            formData.append('file', file);
+
+            $.ajax({
+                url: '/upload_file',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    alert(response.message);
+                    // Optionally: Start the process after a successful upload
+                    startProcess();
+                },
+                error: function(xhr, status, error) {
+                    alert('Upload failed: ' + xhr.responseText);
+                }
+            });
+        }
+
+        document.getElementById('file-upload').addEventListener('change', function() {
+            const label = document.getElementById('file-label');
+            if (this.files && this.files.length) {
+                label.innerHTML = '<strong>' + this.files[0].name + '</strong>';
+            } else {
+                label.innerHTML = '<strong>Choose a file</strong>';
+            }
+        });
+
+
+        function startProcess() {
+            setTimeout(() => { document.getElementById('synthesizing').classList.add('completed') }, 1000);
+            setTimeout(() => { document.getElementById('data-preparation').classList.add('completed') }, 2000);
+            setTimeout(() => { document.getElementById('training-validation').classList.add('completed') }, 3000);
+            setTimeout(() => { document.getElementById('download-available').classList.add('completed') }, 4000);
+        }
+    </script>
+</body>
+
+</html>
